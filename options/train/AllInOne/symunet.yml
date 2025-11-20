@@ -1,0 +1,186 @@
+# ------------------------------------------------------------------------
+# Copyright (c) 2022 megvii-model. All Rights Reserved.
+# ------------------------------------------------------------------------
+# Modified from BasicSR (https://github.com/xinntao/BasicSR)
+# Copyright 2018-2020 BasicSR Authors
+# ------------------------------------------------------------------------
+# general settings
+name: SymUNet-AllInOne
+model_type: ImageRestorationModel
+scale: 1
+num_gpu: 4
+manual_seed: 42
+
+datasets:
+  train:
+    name: AllInOne_train
+    type: PairedALLINONEImageDataset
+    
+    tasks: ['denoise_15', 'denoise_25', 'denoise_50', 'derain', 'dehaze', 'deblur', 'lowlight']
+    
+    dataroot_denoise: /mnt/hdd/Datasets/all_in_one/train/Denoise/
+    meta_info_denoise: /mnt/hdd/Datasets/all_in_one/train/denoise.txt
+
+    dataroot_derain: /mnt/hdd/Datasets/all_in_one/train/Derain/
+    meta_info_derain: /mnt/hdd/Datasets/all_in_one/train/rainTrain.txt
+
+    dataroot_dehaze: /mnt/hdd/Datasets/all_in_one/train/Dehaze/
+    meta_info_dehaze: /mnt/hdd/Datasets/all_in_one/train/hazy_outside.txt
+
+    dataroot_deblur_lq: /mnt/hdd/Datasets/GoPro/train/blur_crops.lmdb
+    dataroot_deblur_gt: /mnt/hdd/Datasets/GoPro/train/sharp_crops.lmdb
+
+    dataroot_lowlight: /mnt/hdd/Datasets/all_in_one/train/LowLight/
+
+    gt_size: 128
+    use_flip: true
+    use_rot: true  
+
+    io_backend:
+      type: disk
+
+    degradation_opt: {}
+
+    # data loader
+    use_shuffle: true
+    num_worker_per_gpu: 8
+    batch_size_per_gpu: 4
+    dataset_enlarge_ratio: 1
+    prefetch_mode: ~
+
+  val_derain_rain100l:
+    name: Derain_TestSet_Rain100L
+    type: PairedDerainDehazeTestDataset
+    task: derain
+    dataroot_lq: /mnt/hdd/Datasets/all_in_one/test/derain/Rain100L/input/
+    dataroot_gt: /mnt/hdd/Datasets/all_in_one/test/derain/Rain100L/target/
+    io_backend:
+      type: disk
+
+  val_denoise_bsd68_15:
+    name: BSD68_Denoise_sigma15
+    type: DenoiseTestPairedDataset
+    sigma: 15
+    dataroot_gt: /mnt/hdd/Datasets/all_in_one/test/denoise/bsd68/
+    io_backend: {type: disk}
+
+  val_denoise_bsd68_25:
+    name: BSD68_Denoise_sigma25
+    type: DenoiseTestPairedDataset
+    sigma: 25
+    dataroot_gt: /mnt/hdd/Datasets/all_in_one/test/denoise/bsd68/
+    io_backend: {type: disk}
+  
+  val_denoise_bsd68_50:
+    name: BSD68_Denoise_sigma50
+    type: DenoiseTestPairedDataset
+    sigma: 50
+    dataroot_gt: /mnt/hdd/Datasets/all_in_one/test/denoise/bsd68/
+    io_backend: {type: disk}
+
+  val_dehaze_sots:
+    name: SOTS_Outdoor_Dehaze_Test
+    type: PairedDerainDehazeTestDataset
+    task: dehaze
+    dataroot_lq: /mnt/hdd/Datasets/all_in_one/test/dehaze/input/
+    dataroot_gt: /mnt/hdd/Datasets/all_in_one/test/dehaze/target/
+    io_backend: {type: disk}
+
+  val_deblur_gopro:
+    name: GoPro_Test
+    type: PairedImageDataset
+    dataroot_lq: /mnt/hdd/Datasets/GoPro/test/input.lmdb
+    dataroot_gt: /mnt/hdd/Datasets/GoPro/test/target.lmdb
+    io_backend:
+      type: lmdb
+
+  val_lowlight_lol:
+    name: LOL_Test
+    type: PairedLowlightTestDataset
+    dataroot_lq: /mnt/hdd/Datasets/all_in_one/test/lowlight/low/
+    dataroot_gt: /mnt/hdd/Datasets/all_in_one/test/lowlight/high/
+    io_backend:
+      type: disk
+
+
+network_g:
+  # type: SymUNet
+  type: SESymUnet
+  img_channel: 3
+  width: 48
+  enc_blk_nums: [4, 6, 6]
+  middle_blk_num: 8
+  dec_blk_nums: [6, 6, 4]
+  cross_attn_inner_dims: [1024, 1024, 1024]
+  middle_cross_attn_inner_dim: 1024
+  cross_attn_heads: [1, 2, 4]
+  middle_cross_attn_heads: 8
+  patch_sizes: [4, 4, 4]
+  middle_patch_size: 2 
+  restormer_heads: [1, 2, 4]
+  restormer_middle_heads: 8
+  clip_model_name: openai/clip-vit-large-patch14
+
+# path
+path:
+  pretrain_network_g: ~
+  strict_load_g: true
+  resume_state: ~
+
+# training settings
+train:
+  optim_g:
+    type: AdamW
+    lr: !!float 1e-3
+    weight_decay: !!float 1e-3
+    betas: [0.9, 0.999]
+
+  scheduler:
+    type: TrueCosineAnnealingLR
+    T_max: 300000
+    eta_min: !!float 1e-7
+
+  total_iter: 300000
+  warmup_iter: -1 # no warm up
+
+  grad_clip:
+    max_norm: 0.01
+    norm_type: 2
+
+  pixel_opt:
+    type: L1Loss
+    loss_weight: 1
+    reduction: mean
+
+  fft_loss_opt:
+    type: FFTLoss
+    loss_weight: 0.1
+    reduction: 'mean'
+
+val:
+  val_freq: !!float 2e4
+  save_img: false
+
+  metrics:
+    psnr:
+      type: calculate_psnr_aio
+      crop_border: 0
+      data_range: 1.0
+    ssim:
+      type: calculate_ssim_aio
+      crop_border: 0
+      data_range: 1.0
+
+# logging settings
+logger:
+  print_freq: 500
+  save_checkpoint_freq: !!float 1e4
+  use_tb_logger: true
+  wandb:
+    project: ~
+    resume_id: ~
+
+# dist training settings
+dist_params:
+  backend: nccl
+  port: 29555

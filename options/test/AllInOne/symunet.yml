@@ -1,0 +1,114 @@
+# ------------------------------------------------------------------------
+# Copyright (c) 2022 megvii-model. All Rights Reserved.
+# ------------------------------------------------------------------------
+# Modified from BasicSR (https://github.com/xinntao/BasicSR)
+# Copyright 2018-2020 BasicSR Authors
+# ------------------------------------------------------------------------
+# general settings
+name: SemanticNet-Test
+model_type: ImageRestorationWithTextModel
+scale: 1
+num_gpu: 4 # set num_gpu: 0 for cpu mode
+manual_seed: 42
+
+# dataset and data loader settings
+datasets:
+
+  test_denoise_bsd68_15:
+    name: BSD68_Denoise_sigma15
+    type: DenoiseTestPairedDataset
+    sigma: 15
+    dataroot_gt: /mnt/hdd/Datasets/all_in_one/test/denoise/bsd68/
+    io_backend: {type: disk}
+
+  test_denoise_bsd68_25:
+    name: BSD68_Denoise_sigma25
+    type: DenoiseTestPairedDataset
+    sigma: 25
+    dataroot_gt: /mnt/hdd/Datasets/all_in_one/test/denoise/bsd68/
+    io_backend: {type: disk}
+  
+  test_denoise_bsd68_50:
+    name: BSD68_Denoise_sigma50
+    type: DenoiseTestPairedDataset
+    sigma: 50
+    dataroot_gt: /mnt/hdd/Datasets/all_in_one/test/denoise/bsd68/
+    io_backend: {type: disk}
+
+  test_derain_rain100h:
+    name: Rain100L_Derain_Test
+    type: PairedDerainDehazeTestDataset
+    task: derain
+    dataroot_lq: /mnt/hdd/Datasets/all_in_one/test/derain/Rain100L/input/
+    dataroot_gt: /mnt/hdd/Datasets/all_in_one/test/derain/Rain100L/target/
+    io_backend: {type: disk}
+    
+  test_dehaze_sots:
+    name: SOTS_Outdoor_Dehaze_Test
+    type: PairedDerainDehazeTestDataset
+    task: dehaze
+    dataroot_lq: /mnt/hdd/Datasets/all_in_one/test/dehaze/input/
+    dataroot_gt: /mnt/hdd/Datasets/all_in_one/test/dehaze/target/
+    io_backend: {type: disk}
+
+  test_deblur_gopro:
+    name: GoPro_Test
+    type: PairedImageDataset
+    dataroot_lq: /mnt/hdd/Datasets/GoPro/test/input.lmdb
+    dataroot_gt: /mnt/hdd/Datasets/GoPro/test/target.lmdb
+    io_backend:
+      type: lmdb
+
+  test_lowlight_lol:
+    name: LOL_Test
+    type: PairedLowlightTestDataset
+    dataroot_lq: /mnt/hdd/Datasets/all_in_one/test/lowlight/low/
+    dataroot_gt: /mnt/hdd/Datasets/all_in_one/test/lowlight/high/
+    io_backend:
+      type: disk
+
+# network structures
+network_g:
+  # type: SymUNet
+  type: SESymUnet
+  img_channel: 3
+  width: 48
+  enc_blk_nums: [4, 6, 6]
+  middle_blk_num: 8
+  dec_blk_nums: [6, 6, 4]
+  cross_attn_inner_dims: [1024, 1024, 1024]
+  middle_cross_attn_inner_dim: 1024
+  cross_attn_heads: [1, 2, 4]
+  middle_cross_attn_heads: 8
+  patch_sizes: [4, 4, 4]
+  middle_patch_size: 2 
+  restormer_heads: [1, 2, 4]
+  restormer_middle_heads: 8
+  clip_model_name: openai/clip-vit-large-patch14
+
+# path
+path:
+  pretrain_network_g: /mnt/hdd/jwl/frenet/experiments/SymUNet-AllInOne/models/net_g_latest.pth
+  strict_load_g: true
+  resume_state: ~
+
+# validation settings
+val:
+  save_img: true
+  grids: false
+
+
+  metrics:
+    psnr:
+      type: calculate_psnr_aio
+      crop_border: 0
+      data_range: 1.0
+    ssim:
+      type: calculate_ssim_aio
+      crop_border: 0
+      data_range: 1.0
+
+# dist training settings
+dist_params:
+  backend: nccl
+  port: 29500

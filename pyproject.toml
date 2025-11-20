@@ -1,0 +1,49 @@
+# pyproject.toml (精确重写版)
+
+[build-system]
+# 声明构建时依赖，精确对应原始 setup.py 中的 `setup_requires`
+# 同时添加 torch，因为原始 setup.py 在全局导入了它
+requires = [
+    "setuptools>=61.0",
+    "wheel",
+    "cython",
+    "numpy",
+    "torch"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+# 静态元数据，精确对应原始 setup() 中的参数
+name = "basicsr"
+version = "1.2.0"
+description = "Open Source Image and Video Super-Resolution Toolbox"
+readme = "README.md"
+authors = [ { name = "Xintao Wang", email = "xintao.wang@outlook.com" } ]
+keywords = ["computer vision", "restoration", "super resolution"]
+license = { text = "Apache License 2.0" }
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+]
+
+# 运行时依赖。原始 setup.py 的 get_requirements() 返回空列表，
+# 所以我们这里也保持为空。
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/xinntao/BasicSR"
+
+[tool.setuptools]
+# 包含非 Python 文件。我们明确指定包含 C++/CUDA 源码。
+include-package-data = true
+
+[tool.setuptools.package-data]
+"basicsr" = ["**/*.cpp", "**/*.cu"]
+
+[tool.setuptools.packages.find]
+# 自动发现包，精确对应原始 setup.py 中的 `find_packages()`
+exclude = ["options*", "datasets*", "experiments*", "results*", "tb_logger*", "wandb*"]
