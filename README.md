@@ -2,7 +2,7 @@
 
 ## QuickRun
 
-### Installhttps://github.com/WenlongJiao/SymUNet/blob/main/README.md
+### Install
 
 ```bash
 conda env create -f environment.yml
