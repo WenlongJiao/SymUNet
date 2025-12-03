@@ -349,7 +349,7 @@ class Upsample(nn.Module):
         return self.body(x)
     
 # original
-class SESymUnet(nn.Module):
+class SESymUNet(nn.Module):
     def __init__(self, img_channel=3, width=64, middle_blk_num=1, 
                  enc_blk_nums=[], dec_blk_nums=[], 
                  clip_model_name="openai/clip-vit-large-patch14",
