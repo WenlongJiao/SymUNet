@@ -105,7 +105,7 @@ datasets:
 
 network_g:
   # type: SymUNet
-  type: SESymUnet
+  type: SESymUNet
   img_channel: 3
   width: 48
   enc_blk_nums: [4, 6, 6]
