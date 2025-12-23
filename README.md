@@ -1,5 +1,5 @@
 # Unleashing Degradation-Carrying Features in Symmetric U-Net: Simpler and Stronger Baselines for All-in-One Image Restoration
-Wenlong Jiao, Heyang Lee, Ping Wang, Pengfei Zhu, Qinghua Hu, Dongwei Ren
+Wenlong Jiao, Heyang Lee, Ping Wang, Pengfei Zhu, Qinghua Hu, [Dongwei Ren](https://csdwren.github.io/)
 <div style="display: flex; justify-content: center; align-items: center;">
   <a href="https://arxiv.org/abs/2512.10581" style="margin: 0 2px;">
     <img src='https://img.shields.io/badge/arXiv-2512.10581-red' alt='arxiv'>
@@ -31,3 +31,19 @@ CUDA_VISIBLE_DEVICES=x,x torchrun --nproc_per_node=x --master_port=xxxxx basicsr
 ```bash
 CUDA_VISIBLE_DEVICES=x,x torchrun --nproc_per_node=x --master_port=xxxxx basicsr/test.py -opt options/test/AllInOne/xxx.yml --launcher pytorch
 ```
+
+
+## Citation
+
+```
+@article{jiao2025unleashing,
+  title={Unleashing Degradation-Carrying Features in Symmetric U-Net: Simpler and Stronger Baselines for All-in-One Image Restoration},
+  author={Jiao, Wenlong and Lee, Heyang and Wang, Ping and Zhu, Pengfei and Hu, Qinghua and Ren, Dongwei},
+  journal={arXiv preprint arXiv:2512.10581},
+  year={2025}
+}
+```
+
+## Acknowledgment
+
+This code is built upon [NAFNet](https://github.com/megvii-research/NAFNet) and [BasicSR](https://github.com/xinntao/BasicSR). We thank the authors for their excellent work.
