@@ -353,7 +353,7 @@ def main():
     
     val_params = opt.get('val', {})
     val_save_img = val_params.get('save_img', False)
-    val_rgb2bgr = val_params.get('rgb2bgr', False)
+    val_rgb2bgr = val_params.get('rgb2bgr', True)
     val_use_image = val_params.get('use_image', False)
 
     if update_schedule_by == 'epoch' and not is_progressive:
